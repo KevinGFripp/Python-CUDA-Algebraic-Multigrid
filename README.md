@@ -1,21 +1,51 @@
-A Python + CUDA (cuPy) implementation of Algebraic Multigrid (AMG) for sparse linear systems of equations (Ax = b) discretised onto a 2D Cartesian grid.
+# Python + CUDA Algebraic Multigrid
+High-performance GPU-accelerated multigrid / multigrid + bicgstab solver for structured Cartesian grids.
 
-A is expected to be diagonally dominant and of CSR format.
+## Overview
+Implementation of algebraic multigrid (AMG) as a standalone iterative solver, or preconditioner for bicgstab(1), aimed at solving 2D Poisson equations:
 
-All data formats are expected to be single precision, in row-major order (ndarrays or csr_matrix).
+∇²u(x,y) = f(x,y) , 
 
-AMG supports 'V' or 'F' cycles.
-
-AMG can be used as a standalone iterative solver or as a preconditioner, implemented for bicgstab(1).
-
-Example Poisson solution:
+or other diagonally dominant and structured sparse linear systems of equations, Ax=b.
 
 
-<img width="1022" height="469" alt="Solutions" src="https://github.com/user-attachments/assets/a8266380-481f-46b7-a627-53d590339c19" />
+## Multigrid Construction
+- Bi-linear or cubic restriction/prolongation operators
+- Row-weighted "Sparse Approximate Inverse" Jacobi smoother
+- 'V' and 'F' cycles
 
+
+## Features
+- Flexibility of cuPy
+- CUDA-accelerated fused stencil operations
+- Warp-level and thread-level spMV CUDA kernel optimisations
+- Supports arbitrary (even/odd) grid sizes
+- Single precision
+- CPU and GPU versions
+
+## Structure
+
+├── BICGSTAB_L/            # Pre-conditioned bicgstab(1) solver and kernels  
+
+├── Multigrid/         # Base algbebraic multigrid implementation, cycles and kernels 
+
+├── Laplacians/          # Example 2nd order Laplacian matrix 
+
+├── SparseApproximateInverse/     # Multigrid smoother and kernels
+
+Example_AMG_PoissonProblem.py # Solve the poisson problem on the CPU and GPU, and compare performance.
+
+## 📊 Performance (AMD Ryzen 9 9950x3D vs Nvidia RTX 4090)
 <img width="487" height="462" alt="Performance" src="https://github.com/user-attachments/assets/533cebb8-b287-4d38-aa85-96b4a1a75bcd" />
 
+~ 37x versus the CPU at 4096^2 cells
 
+## Installation
 
+### Requirements
+- CUDA >= 11.0
+- Python >= 3.10
+- NumPy,
+- Numba,
+- CuPy
 
-Required packages: cuPy, NumPy, Numba, SciPy, Matplotlib
