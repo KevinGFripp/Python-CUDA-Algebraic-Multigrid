@@ -35,12 +35,18 @@ or other diagonally dominant and structured sparse linear systems of equations, 
 
 Example_AMG_PoissonProblem.py # Solve the poisson problem on the CPU and GPU, and compare performance.
 
+# Example : Poisson Problem
+
+<img width="1200" height="500" alt="Solutions" src="https://github.com/user-attachments/assets/fcec1d2e-c467-49db-835a-2797e5bebd09" />
+
+
 ## 📊 Performance (AMD Ryzen 9 9950x3D vs Nvidia RTX 4090)
 
-<img width="459" height="445" alt="Performance" src="https://github.com/user-attachments/assets/bd56e39c-2e9b-4726-b91c-76da5b230f87" />
+
+<img width="597" height="573" alt="Performance" src="https://github.com/user-attachments/assets/d0ce160f-9b31-471a-91dd-f129e22314fb" />
 
 
-~ 37x versus the CPU at 4096^2 cells
+~ 42x versus the CPU at 4096^2 cells
 
 ## Installation
 
