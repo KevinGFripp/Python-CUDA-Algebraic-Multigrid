@@ -48,6 +48,12 @@ Example_AMG_PoissonProblem.py # Solve the poisson problem on the CPU and GPU, an
 
 ~ 42x versus the CPU at 4096^2 cells
 
+## Considerations
+
+Strictly for a Laplacian matrix on a regular grid, the stencil may be known ahead of time. This would replace spMV operations by e.g. the smoother with much faster stencil CUDA kernels.
+
+This whilst improving performance, however, would hard-code the problem. Keeping 'A' as a matrix makes it more flexible, for example, applied to non-uniform Cartesian grids, modified stencils and boundary conditions.
+
 ## Installation
 
 ### Requirements
