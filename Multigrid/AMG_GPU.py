@@ -1,10 +1,10 @@
-from selectors import SelectSelector
-
 from Multigrid.Grid_gpu import Grid_GPU
-from cupy import ndarray
+from cupy import ndarray,float32
 from cupy.linalg import norm
 from cupyx.scipy.sparse import csr_matrix
-from SparseApproximateInverse.SPAI_0_gpu import spai_0_gpu_smoother,spai_0_gpu_x0_0_smoother
+from SparseApproximateInverse.SPAI_0_gpu import (spai_0_gpu_smoother,
+                                                 spai_0_gpu_x0_0_smoother,
+                                                 spai_0_gpu_red_black_smoother)
 from Multigrid.Kernels.residual_restriction_kernels import restriction
 from Multigrid.Kernels.prolongation_kernels import prolongation
 from BICGSTAB_L.Kernels.residual_kernels import compute_residual
@@ -41,7 +41,8 @@ def amg_gpu(grids: list[Grid_GPU],b: ndarray,x0: ndarray,max_iterations: int,tol
     # update RHS and initial solution
     grids[0].x = x0
     grids[0].b = b
-    norm_b = norm(b)
+    norm_b = norm(b).get()
+    r_norm = float32(1.0)
 
     # iteration count
     iteration = 0
@@ -55,13 +56,19 @@ def amg_gpu(grids: list[Grid_GPU],b: ndarray,x0: ndarray,max_iterations: int,tol
 
         # error
         grids[0].temp_array = residual(grids[0].Matrix,grids[0].x,grids[0].b)
-        r_norm = (norm(grids[0].temp_array)/norm_b)
+        r_norm = norm(grids[0].temp_array).get()
 
-        if r_norm.get() <= tol:
+        if converged(r_norm, norm_b,float32(tol),float32(1e-6)):
             break
 
 
-    return grids[0].x, r_norm, iteration
+    return grids[0].x, r_norm/norm_b, iteration
+
+
+def converged(r: float32, b: float32, reltol: float32, abstol: float32) -> bool:
+
+    return r <= max([b*reltol,abstol])
+
 
 def amg_cycle(grids: list[Grid_GPU],cycle):
     '''
@@ -177,12 +184,21 @@ def amg_cycle(grids: list[Grid_GPU],cycle):
                      grids[v].Nx, grids[v].Ny,
                      grids[v + 1].Nx, grids[v + 1].Ny)
 
-        # post-smooth
-        grids[v].x = spai_0_gpu_smoother(grids[v].Matrix,
-                                         grids[v].M,
-                                         grids[v].b,
-                                         grids[v].x,
-                                         iterations=2)
+        if v > 0:
+            # post-smooth
+            grids[v].x = spai_0_gpu_smoother(grids[v].Matrix,
+                                             grids[v].M,
+                                             grids[v].b,
+                                             grids[v].x,
+                                             iterations=2)
+        else:
+            grids[0].x = spai_0_gpu_red_black_smoother(grids[0].Matrix,
+                                                       grids[0].M,
+                                                       grids[0].b,
+                                                       grids[0].x,
+                                                       2,
+                                                       grids[0].Nx, grids[0].Ny)
+
 
     return grids[0].x
 
@@ -214,7 +230,11 @@ def amg_cycle_preconditioner(grids: list[Grid_GPU],b: ndarray,x0: ndarray,cycle)
     grids[0].b = b
 
     ## Multigrid cycle
-    grids[0].x = spai_0_gpu_x0_0_smoother(grids[0].Matrix,grids[0].M,grids[0].b,grids[0].x,iterations=2)
+    grids[0].x = spai_0_gpu_x0_0_smoother(grids[0].Matrix,
+                                          grids[0].M,
+                                          grids[0].b,
+                                          grids[0].x,
+                                          iterations=2)
 
     # restrict to coarser mesh
     grids[1].b = restriction(
@@ -293,8 +313,20 @@ def amg_cycle_preconditioner(grids: list[Grid_GPU],b: ndarray,x0: ndarray,cycle)
                      grids[v].Nx,grids[v].Ny,
                      grids[v + 1].Nx, grids[v + 1].Ny)
 
+        if v > 0:
         # post-smooth
-        grids[v].x = spai_0_gpu_smoother(grids[v].Matrix, grids[v].M, grids[v].b, grids[v].x,iterations=2)
+            grids[v].x = spai_0_gpu_smoother(grids[v].Matrix,
+                                        grids[v].M,
+                                        grids[v].b,
+                                        grids[v].x,
+                                        iterations=2)
+        else:
+            grids[v].x = spai_0_gpu_red_black_smoother(grids[v].Matrix,
+                                                       grids[v].M,
+                                                       grids[v].b,
+                                                       grids[v].x,
+                                                       2,
+                                                       grids[v].Nx, grids[v].Ny)
 
 
     return grids[0].x
