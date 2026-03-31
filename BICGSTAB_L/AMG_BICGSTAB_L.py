@@ -27,7 +27,7 @@ def amg_bicgstab_l(grids: list[Grid], b: ndarray, x0: ndarray, max_iterations: i
     r = b - grids[0].Matrix @ x
     rho = dot(rhat,r)
     P: ndarray = r
-    norm_b = norm(b) if norm(b) != 0 else 1.0
+    norm_b = norm(b)
     r_norm = norm(r)/norm_b
 
     #amg x0
@@ -43,10 +43,10 @@ def amg_bicgstab_l(grids: list[Grid], b: ndarray, x0: ndarray, max_iterations: i
         h = x + alpha * y
         s  = r - alpha * v
 
-        r_norm = norm(s) / norm_b
+        r_norm = norm(s)
 
         iterations += 0.5
-        if r_norm < tol:
+        if converged(r_norm,norm_b,float32(tol),float32(1e-6)):
             x = h
             break
 
@@ -58,10 +58,10 @@ def amg_bicgstab_l(grids: list[Grid], b: ndarray, x0: ndarray, max_iterations: i
         x = h + omega * z
         r = s - omega * t
 
-        r_norm = norm(r)/norm_b
+        r_norm = norm(r)
 
         iterations += 0.5
-        if r_norm < tol:
+        if converged(r_norm,norm_b,float32(tol),float32(1e-6)):
             break
 
         rho_1 = dot(rhat,r)
@@ -69,4 +69,9 @@ def amg_bicgstab_l(grids: list[Grid], b: ndarray, x0: ndarray, max_iterations: i
         P = r + beta * (P - omega * v)
         rho = rho_1
 
-    return x, r_norm, iterations
+    return x, r_norm / norm_b, iterations
+
+
+def converged(r: float32, b: float32, reltol: float32, abstol: float32) -> bool:
+
+    return r <= max([b*reltol,abstol])

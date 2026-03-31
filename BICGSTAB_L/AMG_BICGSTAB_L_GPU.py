@@ -3,7 +3,7 @@ from Multigrid.Grid_gpu import Grid_GPU as Grid
 from cupy.random import rand
 from cupy import ndarray, zeros_like, dot,asarray
 from cupy.linalg import norm
-from numpy import float32
+from numpy import float32,max
 from BICGSTAB_L.Kernels.BICGSTAB_kernels import omega_dot_ratio,beta_ratio,ax_plus_by
 
 
@@ -31,8 +31,8 @@ def amg_bicgstab_l_gpu(grids: list[Grid], b: ndarray, x0: ndarray, max_iteration
     r: ndarray(dtype=float32) = b - grids[0].Matrix @ x
     rho: ndarray(dtype=float32) = rhat @ r
     P: ndarray(dtype=float32) = r
-    inv_norm_b = asarray(1./norm(b),dtype=float32) if norm(b) != 0.0 else asarray(1.0,dtype=float32)
-    r_norm = norm(r) * inv_norm_b
+    norm_b = norm(b).get()
+    r_norm = norm(r).get()
 
 
     iterations = 0.0
@@ -46,10 +46,10 @@ def amg_bicgstab_l_gpu(grids: list[Grid], b: ndarray, x0: ndarray, max_iteration
         h = ax_plus_by(1.,x,alpha,y)
         s = ax_plus_by(1.,r,-alpha,v)
 
-        r_norm: ndarray(dtype=float32) = norm(s) * inv_norm_b
+        r_norm = norm(s).get()
 
         iterations += 0.5
-        if r_norm.get() < tol:
+        if converged(r_norm,norm_b,float32(tol),float32(1e-6)):
             x = h
             break
 
@@ -61,10 +61,11 @@ def amg_bicgstab_l_gpu(grids: list[Grid], b: ndarray, x0: ndarray, max_iteration
         x = ax_plus_by(1.,h,omega,z)
         r = ax_plus_by(1.,s,-omega,t)
 
-        r_norm = norm(r) * inv_norm_b
+        #r_norm = norm(r) * inv_norm_b
+        r_norm = norm(r).get()
 
         iterations += 0.5
-        if r_norm.get() < tol:
+        if converged(r_norm,norm_b,float32(tol),float32(1e-6)):
             break
 
         rho_1 = dot(rhat,r)
@@ -73,7 +74,12 @@ def amg_bicgstab_l_gpu(grids: list[Grid], b: ndarray, x0: ndarray, max_iteration
 
         rho = rho_1
 
-    return x, r_norm, iterations
+    return x, r_norm/norm_b, iterations
+
+def converged(r: float32, b: float32, reltol: float32, abstol: float32) -> bool:
+
+    return r <= max([b*reltol,abstol])
+
 
 
 
