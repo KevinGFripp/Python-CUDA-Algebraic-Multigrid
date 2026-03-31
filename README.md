@@ -46,8 +46,11 @@ Example_AMG_PoissonProblem.py # Solve the poisson problem on the CPU and GPU, an
 
 <img width="567" height="580" alt="Performance" src="https://github.com/user-attachments/assets/8129cd25-7797-4812-950f-0fef3e047829" />
 
-
-~ 45x versus the CPU at 4096^2 cells
+### Takeaways
+- The CPU is expected to be competitive at very small problem sizes.
+- Below a grid size of $512^2$, kernel execution overhead is a dominant contribution to the solve time.
+- At larger problem sizes, the GPU becomes saturated and kernel overhead is suppressed.
+- At $4096^2$ cells, the GPU is ~45x faster than the CPU (80 ms per solve).
 
 ## Considerations
 
