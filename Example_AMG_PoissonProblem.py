@@ -78,9 +78,8 @@ if __name__ == '__main__':
 
     toc = timer.time()
     print('GPU time = ', toc-tic,' s')
-    print('relative residual = ' + str(r_norm_gpu.get()))
+    print('relative residual = ' + str(r_norm_gpu))
     print('iterations = ' + str(iterations_gpu))
-
 
 
     plt.style.use('dark_background')
@@ -104,6 +103,8 @@ if __name__ == '__main__':
     ax2.set_title('CPU Solution',fontsize=20)
 
     plt.show()
+
+
 
 
 
