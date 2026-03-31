@@ -12,6 +12,7 @@ or other diagonally dominant and structured sparse linear systems of equations, 
 ## Multigrid Construction
 - Bi-linear or cubic restriction/prolongation operators
 - Row-weighted "Sparse Approximate Inverse" Jacobi smoother
+- Red-Black colouring fine grid post-smoothing
 - 'V' and 'F' cycles
 
 
