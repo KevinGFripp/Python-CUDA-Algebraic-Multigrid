@@ -44,10 +44,10 @@ Example_AMG_PoissonProblem.py # Solve the poisson problem on the CPU and GPU, an
 ## 📊 Performance (AMD Ryzen 9 9950x3D vs Nvidia RTX 4090)
 
 
-<img width="597" height="573" alt="Performance" src="https://github.com/user-attachments/assets/d0ce160f-9b31-471a-91dd-f129e22314fb" />
+<img width="567" height="580" alt="Performance" src="https://github.com/user-attachments/assets/8129cd25-7797-4812-950f-0fef3e047829" />
 
 
-~ 42x versus the CPU at 4096^2 cells
+~ 45x versus the CPU at 4096^2 cells
 
 ## Considerations
 
